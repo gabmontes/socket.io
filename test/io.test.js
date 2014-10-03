@@ -71,7 +71,7 @@ module.exports = {
     });
   },
 
-  'test listening with a https server': function (done) {
+  /*'test listening with a https server': function (done) {
     var server = https.createServer({
             key: fs.readFileSync(__dirname + '/fixtures/key.key')
           , cert: fs.readFileSync(__dirname + '/fixtures/cert.crt')
@@ -102,7 +102,7 @@ module.exports = {
         done();
       });
     });
-  },
+  },*/
 
   'test listening with no arguments listens on 80': function (done) {
     try {

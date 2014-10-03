@@ -991,6 +991,124 @@ done();return;
     });
   },
 
+  'test emitting to all clients in two rooms': function (done) {
+    var port = ++ports
+      , cl1 = client(port)
+      , cl2 = client(port)
+      , cl3 = client(port)
+      , io = create(cl1)
+      , messages = 0
+      , joins = 0
+      , connections = 0
+      , disconnections = 0;
+
+    io.configure(function () {
+      io.set('close timeout', 0);
+    });
+
+    io.sockets.on('connection', function (socket) {
+      connections++;
+
+      if (connections != 3) {
+        if (connections === 1) {
+          socket.join("foot");
+        }
+
+        socket.join('woot');
+        joins++;
+
+        if (joins == 2) {
+          setTimeout(function () {
+            connections.should.eql(3);
+            io.sockets.in('woot').in('foot').emit('locki');
+          }, 20);
+        }
+      }
+
+      socket.on('disconnect', function () {
+        disconnections++;
+
+        if (disconnections == 3) {
+          messages.should.eql(2);
+          cl1.end();
+          cl2.end();
+          cl3.end();
+          io.server.close();
+          done();
+        }
+      });
+    });
+
+    cl1.handshake(function (sid) {
+      var ws1 = websocket(cl1, sid);
+      ws1.on('message', function (msg) {
+        if (!ws1.connected) {
+          msg.type.should.eql('connect');
+          ws1.connected = true;
+        } else {
+          msg.should.eql({
+              type: 'event'
+            , name: 'locki'
+            , args: []
+            , endpoint: ''
+          });
+
+          messages++;
+        }
+      });
+
+      setTimeout(function () {
+        ws1.finishClose();
+      }, 50);
+    });
+
+    cl2.handshake(function (sid) {
+      var ws2 = websocket(cl2, sid);
+      ws2.on('message', function (msg) {
+        if (!ws2.connected) {
+          msg.type.should.eql('connect');
+          ws2.connected = true;
+        } else {
+          msg.should.eql({
+              type: 'event'
+            , name: 'locki'
+            , args: []
+            , endpoint: ''
+          });
+
+          messages++;
+        }
+      });
+
+      setTimeout(function () {
+        ws2.finishClose();
+      }, 50);
+    });
+
+    cl3.handshake(function (sid) {
+      var ws3 = websocket(cl3, sid);
+      ws3.on('message', function (msg) {
+        if (!ws3.connected) {
+          msg.type.should.eql('connect');
+          ws3.connected = true;
+        } else {
+          msg.should.eql({
+              type: 'event'
+            , name: 'locki'
+            , args: []
+            , endpoint: ''
+          });
+
+          messages++;
+        }
+      });
+
+      setTimeout(function () {
+        ws3.finishClose();
+      }, 50);
+    });
+  },
+
   'test leaving a room': function (done) {
     var port = ++ports
       , cl1 = client(port)
