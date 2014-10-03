@@ -26,6 +26,7 @@
       , "benchmark": "0.2.2"
       , "microtime": "0.4.0"
       , "colors": "0.5.1"
+      , "redis-mock": "0.3.0"
     }
   , "optionalDependencies": {
       "redis": "0.7.3"
