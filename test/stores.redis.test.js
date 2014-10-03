@@ -6,7 +6,7 @@
  */
 
 var sio = require('../')
-  , redis = require('redis')
+  , redis = require('redis-mock')
   , should = require('should')
   , RedisStore = sio.RedisStore;
 
@@ -17,8 +17,8 @@ var sio = require('../')
 module.exports = {
 
   'test publishing doesnt get caught by the own store subscriber': function (done) {
-    var a = new RedisStore
-      , b = new RedisStore;
+    var a = new RedisStore({ 'redis': redis })
+      , b = new RedisStore({ 'redis': redis });
 
     a.subscribe('woot', function (arg) {
       arg.should.equal('bb');
@@ -32,9 +32,9 @@ module.exports = {
   },
 
   'test publishing to multiple subscribers': function (done) {
-    var a = new RedisStore
-      , b = new RedisStore
-      , c = new RedisStore
+    var a = new RedisStore({ 'redis': redis })
+      , b = new RedisStore({ 'redis': redis })
+      , c = new RedisStore({ 'redis': redis })
       , subscriptions = 3
       , messages = 2;
 
@@ -65,7 +65,7 @@ module.exports = {
   },
 
   'test storing data for a client': function (done) {
-    var store = new RedisStore
+    var store = new RedisStore({ 'redis': redis })
       , rand = 'test-' + Date.now()
       , client = store.client(rand);
 
@@ -125,7 +125,7 @@ module.exports = {
     var rand1 = Math.abs(Math.random() * Date.now() | 0)
       , rand2 = Math.abs(Math.random() * Date.now() | 0);
 
-    var store = new RedisStore()
+    var store = new RedisStore({ 'redis': redis })
       , client1 = store.client(rand1)
       , client2 = store.client(rand2);
 
@@ -145,7 +145,7 @@ module.exports = {
 
             store.destroy();
 
-            var newstore = new RedisStore()
+            var newstore = new RedisStore({ 'redis': redis })
               , newclient1 = newstore.client(rand1)
               , newclient2 = newstore.client(rand2);
 
@@ -171,7 +171,7 @@ module.exports = {
     var rand1 = Math.abs(Math.random() * Date.now() | 0)
       , rand2 = Math.abs(Math.random() * Date.now() | 0);
 
-    var store = new RedisStore()
+    var store = new RedisStore({ 'redis': redis })
       , client1 = store.client(rand1)
       , client2 = store.client(rand2);
 
@@ -210,18 +210,19 @@ module.exports = {
   },
 
   'test destroy expiration': function (done) {
-    var store = new RedisStore()
+    var store = new RedisStore({ 'redis': redis })
       , id = Math.abs(Math.random() * Date.now() | 0)
       , client = store.client(id);
 
     client.set('a', 'b', function (err) {
       should.strictEqual(err, null);
-      store.destroyClient(id, 1);
 
       setTimeout(function () {
         client.get('a', function (err, val) {
           should.strictEqual(err, null);
           val.should.equal('b');
+
+          store.destroyClient(id, 1);
         });
       }, 500);
 
